@@ -112,3 +112,21 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 - Dichiarazione del marcatore `slow` nella configurazione di pytest.
 - Scelta sul mantenimento della colonna `temperature_deviation` grezza accanto a `temperature_deviation_scaled` nel ramo con quantità.
 - Ordine definitivo di concatenazione delle trasformazioni in `analyze_data`, da confermare in fase di implementazione (Fase 4).
+
+### 14-08-2026 — Fase 2: Classe base astratta e stub degli analizzatori
+
+**Attività**
+- Implementato `winery_adventures/base.py` con la classe astratta `BaseWineryAnalyzer` (ereditarietà da `ABC`, unico metodo astratto `analyze_data`).
+- Aggiunti gli stub minimi `winery_adventures/transformations.py` (`WineryTransformer`) e `winery_adventures/computations.py` (`WineryHPCComputations`), sottoclassi concrete con `analyze_data` che restituisce il DataFrame invariato, necessari a chiudere la catena di import di `test_base.py` e a soddisfare la verifica di ereditarietà.
+
+**Decisioni**
+- Ereditarietà da `ABC` preferita alla forma `metaclass=ABCMeta`, equivalente ma più verbosa.
+- Corpo del metodo astratto ridotto alla sola docstring: `@abstractmethod` impedisce già l'istanziazione, pertanto `raise NotImplementedError` risulterebbe ridondante.
+- Docstring in stile reStructuredText per compatibilità con Sphinx, mantenute all'essenziale (intestazione breve di modulo, una riga per classe e metodo).
+- Stub introdotti come impalcatura minima in coerenza con l'approccio test-driven, con `analyze_data` identità sufficiente alla verifica di ereditarietà.
+
+**Verifica**
+- `test_base.py` verde: 3 test superati (`test_base_class_is_abstract`, `test_base_class_abstract_method`, `test_subclasses`).
+
+**File toccati**
+- Aggiunta di `winery_adventures/base.py`, `winery_adventures/transformations.py`, `winery_adventures/computations.py`. Aggiornamento di `DIARIO.md`.

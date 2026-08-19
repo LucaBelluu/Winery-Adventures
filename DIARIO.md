@@ -207,3 +207,31 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Aggiunta di `winery_adventures/data_loading.py`. Aggiornamento di `DIARIO.md`.
+
+### 19-08-2026 — Fase 4: Trasformazioni dei dati dei sensori
+
+**Attività**
+- Implementata la classe `WineryTransformer` in `winery_adventures/transformations.py`, sostituendo lo stub identità. Aggiunti: costruttore `WineryTransformer(tank_info=None)` che conserva le informazioni sulle cisterne, costante di classe `STANDARD_TEMPERATURE = 26.0`, le quattro trasformazioni e il metodo `analyze_data` di concatenazione.
+- `add_avg_ph_per_tank`: media del pH per cisterna tramite finestra `mean().over("tank_id")`, riportata su ogni riga → `avg_pH_per_tank`.
+- `add_num_readings_per_tank`: conteggio delle letture per cisterna tramite finestra `pl.len().over("tank_id")` → `tank_num_readings`.
+- `add_num_readings_per_grape_variety`: esplosione della lista dei vitigni (`explode`), unione alle letture su `tank_id` (`join` interno), conteggio per vitigno tramite finestra `pl.len().over("grape_variety")` → `grape_variety_num_readings`. Modifica il numero di righe. Con `tank_info` pari a `None` solleva `AttributeError`, operando direttamente sul DataFrame delle cisterne.
+- `add_temperature_deviation`: scarto assoluto dalla temperatura standard → `temperature_deviation`; in presenza di `quantity_liters` aggiunge `temperature_deviation_scaled = deviazione * 1000 / quantity_liters` con propagazione dei null; in assenza della colonna omette la versione scalata.
+- `analyze_data`: applica in sequenza media del pH, conteggio letture e deviazione di temperatura (trasformazioni che preservano la grana), e per ultima, solo con `tank_info` presente, la trasformazione per vitigno che esplode le righe.
+
+**Decisioni**
+- Finestra `.over()` preferita a `group_by().agg()` seguito da join: la statistica per cisterna viene affiancata a ogni lettura in un solo passaggio, senza ridurre e poi riunire le righe.
+- Ordine di concatenazione in `analyze_data` con la trasformazione per vitigno in coda, per non gonfiare i conteggi per cisterna con le righe duplicate dall'esplosione ed evitare `AttributeError` quando `tank_info` manca. Controllo esplicito su `tank_info is not None` anziché cattura dell'eccezione, per esplicitare l'intenzione.
+- Colonna grezza `temperature_deviation` mantenuta accanto a `temperature_deviation_scaled` nel ramo con quantità: utile all'analisi e non in conflitto con i test.
+- Errore su `tank_info` assente lasciato propagare naturalmente in `add_num_readings_per_grape_variety`, in quanto comportamento atteso dai test.
+
+**Verifica**
+- `tests/unit/test_transformations.py`: 6 test superati. Verificata l'uguaglianza esatta dei float per `avg_pH_per_tank` (il test usa il confronto stretto). Confermato che `analyze_data` con `tank_info` produce 9 righe e le quattro colonne attese, e che con `tank_info=None` non esplode e produce `avg_pH_per_tank`.
+- `ruff check` e `ruff format --check` su `winery_adventures/transformations.py` senza segnalazioni.
+
+**File toccati**
+- Modifica di `winery_adventures/transformations.py`. Aggiornamento di `DIARIO.md`.
+
+**Elementi in sospeso**
+- I test `test_pipeline_chain` e `test_analyzers_run` restano rossi finché i calcoli HPC non producono `stress_score` (Fase 5): la Fase 4 fornisce la sola colonna `avg_pH_per_tank`.
+- `DeprecationWarning` di Polars 2.0 sul parametro `empty_as_null` di `str.split`, originato dalla suddivisione dei vitigni nel modulo di caricamento (`data_loading.py`): valutare l'impostazione esplicita del parametro in quel modulo.
+- Dichiarazione del marcatore `slow` di pytest nella configurazione, da affrontare ai test di accettazione.

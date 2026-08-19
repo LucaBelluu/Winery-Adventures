@@ -1,0 +1,18 @@
+# Configurazione degli strumenti di sviluppo del progetto Winery Adventures.
+# Ruff opera sia da formatter (uniforma l'aspetto del codice) sia da linter
+# (segnala errori e violazioni di stile).
+
+[tool.ruff]
+# Lunghezza massima della riga.
+line-length = 120
+# Versione minima di Python supportata, riferimento per i controlli di ammodernamento.
+target-version = "py310"
+
+[tool.ruff.lint]
+# Insiemi di regole attivi:
+#   E, W -> stile PEP 8 (pycodestyle)
+#   F    -> errori logici e import inutilizzati (pyflakes)
+#   I    -> ordinamento degli import (isort)
+#   UP   -> costrutti aggiornati alle versioni recenti di Python (pyupgrade)
+#   B    -> insidie comuni (flake8-bugbear)
+select = ["E", "W", "F", "I", "UP", "B"]

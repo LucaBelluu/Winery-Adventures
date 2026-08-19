@@ -130,3 +130,39 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Aggiunta di `winery_adventures/base.py`, `winery_adventures/transformations.py`, `winery_adventures/computations.py`. Aggiornamento di `DIARIO.md`.
+
+### 14-08-2026 — Fase 2: Configurazione di formatter e linter
+
+**Attività**
+- Aggiunto `pyproject.toml` nella radice della repository con la configurazione di Ruff come formatter e linter.
+- Impostati `line-length = 120` e `target-version = "py310"` (versione minima richiesta dalla consegna).
+- Attivati gli insiemi di regole `E`, `W` (stile PEP 8), `F` (errori e import inutilizzati), `I` (ordinamento import), `UP` (ammodernamento), `B` (insidie comuni).
+
+**Decisioni**
+- Ruff preferito al combo Black + isort + Flake8: strumento unico per formattazione e analisi statica, con ordinamento degli import incluso, a fronte di una configurazione più semplice.
+- Configurazione raccolta in `pyproject.toml`, file standard di progetto letto da Ruff senza opzioni aggiuntive.
+
+**Verifica**
+- `ruff check winery_adventures/` senza segnalazioni; `ruff format --check winery_adventures/` conferma i file già formattati.
+
+**File toccati**
+- Aggiunta di `pyproject.toml`. Aggiornamento di `DIARIO.md`.
+
+### 17-08-2026 — Fase 3: Pipeline di orchestrazione
+
+**Attività**
+- Implementato `winery_adventures/pipeline.py` con la classe `WineryPipeline`: costruttore `(analyzers, project_name="winery-adventures")`, metodo `run(df, log_to_wandb=False)` e metodo `log_to_wandb(df)`.
+- `run` concatena gli analizzatori applicando `analyze_data` in sequenza e restituisce il DataFrame finale, senza copie: una catena che non modifica i dati restituisce l'oggetto originale (identità preservata, verificata da `test_null_analyzers_run` tramite `is`).
+- `log_to_wandb` inizializza l'esperimento con `wandb.init(project=...)`, registra una voce per cisterna con chiave `stress_score` e chiude con `wandb.finish()`.
+
+**Decisioni**
+- Analizzatori gestiti per duck typing, senza controllo di tipo né vincolo di ereditarietà dalla base: `run` richiede soltanto la presenza del metodo `analyze_data`, coerentemente con la `MockAnalyzer` del test che non eredita dalla base.
+- Logging su wandb ridotto a una voce per cisterna tramite `unique(subset="tank_id")`, anziché riga per riga. Il punteggio di stress è costante all'interno del gruppo, quindi le repliche risultano ridondanti; la riduzione contiene il numero di chiamate a `wandb.log` sui dataset di grandi dimensioni. Scartate le alternative del logging per riga (ridondante e oneroso) e del solo aggregato medio (privo del dettaglio per cisterna).
+- Blocco del logging dietro il flag `log_to_wandb`, con default `False`, per evitare dipendenze da wandb nei percorsi che non lo richiedono.
+
+**Verifica**
+- `test_pipeline.py`: superati `test_null_analyzers_run` e `test_log_wandb`, dipendenti unicamente dalla pipeline. `test_analyzers_run` e `test_pipeline_chain` risultano rossi perché richiedono le colonne `avg_pH_per_tank` e `stress_score`, prodotte dagli analizzatori concreti (trasformazioni e calcoli HPC).
+- `ruff check` e `ruff format --check` su `winery_adventures/pipeline.py` senza segnalazioni.
+
+**File toccati**
+- Aggiunta di `winery_adventures/pipeline.py`. Aggiornamento di `DIARIO.md`.

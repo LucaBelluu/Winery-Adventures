@@ -172,3 +172,5 @@ cython_debug/
 
 # Log locali di Weights & Biases
 wandb/
+
+.DS_Store

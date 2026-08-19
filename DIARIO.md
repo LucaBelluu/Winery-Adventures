@@ -235,3 +235,28 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 - I test `test_pipeline_chain` e `test_analyzers_run` restano rossi finché i calcoli HPC non producono `stress_score` (Fase 5): la Fase 4 fornisce la sola colonna `avg_pH_per_tank`.
 - `DeprecationWarning` di Polars 2.0 sul parametro `empty_as_null` di `str.split`, originato dalla suddivisione dei vitigni nel modulo di caricamento (`data_loading.py`): valutare l'impostazione esplicita del parametro in quel modulo.
 - Dichiarazione del marcatore `slow` di pytest nella configurazione, da affrontare ai test di accettazione.
+
+### 19-08-2026 — Fase 5: Formula di stress, calcoli HPC e punto d'ingresso
+
+**Attività**
+- Aggiunta in `winery_adventures/computations.py` della funzione libera `pairwise_stress_function`, compilata con Numba (`@njit`): doppio ciclo pieno O(n²) da 0 a n−1, somma dei contributi di deviazione di pH, deviazione di temperatura (pesata due volte) e fattore inverso al volume, normalizzata su `n²`. Restituisce `0.0` per array vuoti; sui dati di prova restituisce 2.2.
+- Aggiunta della classe `WineryHPCComputations` con `analyze_data`: partizione delle letture per `tank_id`, calcolo dello stress su ciascun gruppo e inserimento della colonna `stress_score`, costante nel gruppo e riportata su ogni riga tramite `replace_strict`.
+- Parallelizzazione del calcolo per cisterna con Joblib (`Parallel`/`delayed`), backend a thread, con accumulo degli esiti in una lista condivisa per effetto collaterale.
+- Aggiunta di `winery_adventures/main.py` con `run_full_pipeline`: caricamento dei due TSV, costruzione di `WineryHPCComputations` e `WineryTransformer`, orchestrazione in `WineryPipeline`, esecuzione con registrazione su wandb e scrittura del DataFrame finale su file.
+- Dichiarazione del marcatore `slow` di pytest nella sezione `[tool.pytest.ini_options]` di `pyproject.toml`.
+
+**Decisioni**
+- Formula implementata nella forma piena e fedele al README, non nella variante che sfrutta la simmetria dei contributi. La compilazione `@njit` soddisfa il requisito di ottimizzazione della fase; la riduzione basata sulla simmetria, che dimezza il lavoro mantenendo la complessità O(n²), è rimandata alla profilazione della Fase 6.
+- Esclusione delle rilevazioni prive di `quantity_liters` dal calcolo dello stress all'interno del gruppo, poiché un volume ignoto non alimenta un fattore che divide per il volume. La funzione compilata resta puramente numerica; la gestione dei nulli è delegata al livello di orchestrazione in Polars.
+- Ordine degli analizzatori in `run_full_pipeline`: calcoli HPC prima delle trasformazioni. L'esplosione dei vitigni duplica le righe; anticipare il calcolo dello stress garantisce la valutazione sulle letture effettive. Lo `stress_score`, costante per cisterna, è replicato senza alterazione dalla successiva esplosione.
+- Parallelizzazione con backend a thread e accumulo per effetto collaterale, in luogo della raccolta del valore di ritorno di `Parallel`: il backend a thread condivide la memoria del processo, quindi l'accodamento resta visibile al termine.
+- Calcolo dello stress collocato in `WineryHPCComputations.analyze_data`, unico punto responsabile sia della logica sia della sua parallelizzazione, in coerenza con la responsabilità singola del modulo.
+
+**Verifica**
+- Suite completa verde: 17 test superati, inclusi `tests/unit/test_computations.py`, i due test di pipeline in precedenza rossi (`test_pipeline_chain`, `test_analyzers_run`) e `tests/acceptance/test_winery_acceptance.py` (9 righe finali, colonne `avg_pH_per_tank` e `stress_score`, chiamate a `Parallel`/`delayed`, registrazione su wandb).
+- Marcatore `slow` riconosciuto: `-m slow` seleziona la sola accettazione, `-m "not slow"` la esclude, nessun avviso di marcatore sconosciuto.
+- `ruff check` e `ruff format --check` su `computations.py` e `main.py` senza segnalazioni.
+- Verifica end-to-end sui campioni `sensors_sample.tsv` e `tank_info_sample.tsv`: 300 righe finali, valori di `stress_score` distinti e coerenti per cisterna.
+
+**File toccati**
+- Aggiunta di `winery_adventures/computations.py` e `winery_adventures/main.py`; modifica di `pyproject.toml` (marcatore `slow`); aggiornamento di `DIARIO.md`.

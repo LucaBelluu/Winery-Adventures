@@ -166,3 +166,44 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Aggiunta di `winery_adventures/pipeline.py`. Aggiornamento di `DIARIO.md`.
+
+### 19-08-2026 — Fase 3: Sistemazioni di configurazione e versionamento
+
+**Attività**
+- Aggiunta della regola `.DS_Store` al `.gitignore` per escludere i file generati da macOS in ogni sottocartella.
+- Correzione del nome del file di configurazione di Ruff da `Pyproject.toml` a `pyproject.toml` (minuscolo) e sua aggiunta al versionamento: il file, previsto in fase di configurazione di Ruff, non risultava tracciato.
+
+**Decisioni**
+- Nome del file di progetto mantenuto in minuscolo (`pyproject.toml`), forma standard cercata dagli strumenti Python e necessaria su filesystem case-sensitive come quelli della futura integrazione continua.
+
+**File toccati**
+- Modifica di `.gitignore`. Aggiunta di `pyproject.toml`.
+
+### 19-08-2026 — Fase 3: Sistemazioni di configurazione e versionamento
+
+**Attività**
+- Aggiunta della regola `.DS_Store` al `.gitignore` per escludere i file generati da macOS in ogni sottocartella.
+- Correzione del nome del file di configurazione di Ruff da `Pyproject.toml` a `pyproject.toml` (minuscolo) e sua aggiunta al versionamento: il file, previsto in fase di configurazione di Ruff, non risultava tracciato.
+
+**Decisioni**
+- Nome del file di progetto mantenuto in minuscolo (`pyproject.toml`), forma standard cercata dagli strumenti Python e necessaria su filesystem case-sensitive come quelli della futura integrazione continua.
+
+**File toccati**
+- Modifica di `.gitignore`. Aggiunta di `pyproject.toml`.
+
+### 19-08-2026 — Fase 3: Caricamento dei dati da file TSV
+
+**Attività**
+- Implementato `winery_adventures/data_loading.py` con due funzioni: `load_sensor_data` legge le letture dei sensori da TSV; `load_tank_info` legge le informazioni sulle cisterne da TSV e suddivide la colonna `grape_variety` da stringa separata da virgole a lista di stringhe.
+
+**Decisioni**
+- Funzioni separate per i due file sorgente, in ragione del diverso trattamento: le letture dei sensori vengono restituite invariate, mentre le informazioni sulle cisterne richiedono la suddivisione dei vitigni.
+- Suddivisione della stringa dei vitigni collocata nel caricamento e non nelle trasformazioni, poiché attiene al formato del dato in ingresso e non all'analisi: la trasformazione riceve il dato già nella forma attesa, coerente con le fixture dei test.
+- Modulo di caricamento distinto da pipeline e trasformazioni, in applicazione del principio di singola responsabilità per modulo.
+
+**Verifica**
+- Caricamento verificato sui file di esempio `sensors_sample.tsv` e `tank_info_sample.tsv`: la colonna `grape_variety` risulta di tipo lista dopo la suddivisione.
+- `ruff check` e `ruff format --check` su `winery_adventures/data_loading.py` senza segnalazioni.
+
+**File toccati**
+- Aggiunta di `winery_adventures/data_loading.py`. Aggiornamento di `DIARIO.md`.

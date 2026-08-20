@@ -26,11 +26,14 @@ from winery_adventures.base import BaseWineryAnalyzer
 def pairwise_stress_function(pH_vals: np.ndarray, temp_vals: np.ndarray, quantity_vals: np.ndarray) -> float:
     """Calcola lo stress di fermentazione su un insieme di rilevazioni.
 
-    La formula confronta ogni coppia ordinata di rilevazioni ``(i, j)`` e
-    accumula il contributo dato dalla differenza di pH, dalla differenza di
-    temperatura (pesata due volte) e da un fattore inversamente proporzionale al
-    volume di mosto delle due cisterne. La somma finale è normalizzata sul
-    numero di coppie ``n * n``.
+    Per ogni coppia di rilevazioni la formula accumula il contributo dato dalla
+    differenza di pH, dalla differenza di temperatura (pesata due volte) e da un
+    fattore inversamente proporzionale al volume di mosto delle due cisterne.
+    Poiché il contributo della coppia ``(i, j)`` coincide con quello di
+    ``(j, i)`` e la diagonale è nulla, l'accumulo percorre il solo triangolo
+    superiore ``i < j`` e raddoppia il totale, dimezzando le coppie valutate a
+    parità di risultato. La complessità resta O(n²) e la somma finale è
+    normalizzata sul numero di coppie ordinate ``n * n``.
 
     :param pH_vals: array dei valori di pH per ogni rilevazione.
     :param temp_vals: array dei valori di temperatura per ogni rilevazione.
@@ -41,16 +44,22 @@ def pairwise_stress_function(pH_vals: np.ndarray, temp_vals: np.ndarray, quantit
     if n == 0:
         return 0.0
     stress_sum = 0.0
-    # Doppio ciclo pieno da 0 a n-1, fedele all'algoritmo del README: ogni coppia
-    # ordinata è considerata, comprese le coppie identiche (i == j), che portano
-    # contributo nullo.
+    # Ottimizzazione per simmetria dei contributi: il contributo della coppia
+    # (i, j) coincide con quello di (j, i), poiché le differenze in valore
+    # assoluto e la somma dei fattori di volume sono simmetriche, e la diagonale
+    # (i == j) è nulla. La somma piena sulle n² coppie ordinate equivale quindi
+    # al doppio della somma sul solo triangolo superiore i < j. Il ciclo interno
+    # parte da i + 1, il totale è moltiplicato per 2 e la normalizzazione su n²
+    # resta invariata: il risultato è identico a quello del ciclo pieno, a meno
+    # del rumore di somma in virgola mobile, mentre le coppie valutate si
+    # dimezzano.
     for i in range(n):
-        for j in range(n):
+        for j in range(i + 1, n):
             pH_dev = abs(pH_vals[i] - pH_vals[j])
             t_dev = abs(temp_vals[i] - temp_vals[j]) * 2.0
             quantity_factor = (500.0 / quantity_vals[i]) + (500.0 / quantity_vals[j])
             stress_sum += (pH_dev + t_dev) * quantity_factor
-    return stress_sum / (n * n)
+    return (2.0 * stress_sum) / (n * n)
 
 
 class WineryHPCComputations(BaseWineryAnalyzer):

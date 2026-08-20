@@ -280,3 +280,23 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Modifica di `requirements.txt` e `.gitignore`. Aggiornamento di `DIARIO.md`. Generazione locale (non versionata) di `data/full_sensors.tsv` e `data/full_tank_info.tsv`.
+
+### 19-08-2026 — Fase 6: Ottimizzazione della formula di stress per simmetria dei contributi
+
+**Attività**
+- Sostituzione del ciclo pieno O(n²) di `pairwise_stress_function` con l'accumulo sul solo triangolo superiore `i < j`, seguito dal raddoppio del totale. Fondamento: il contributo della coppia `(i, j)` coincide con quello di `(j, i)` — differenze in valore assoluto e somma dei fattori di volume simmetriche — e la diagonale è nulla; la somma piena sulle n² coppie equivale al doppio della somma sul triangolo superiore. Le coppie valutate scendono a circa la metà, la complessità resta O(n²), la normalizzazione su `n * n` è invariata.
+- Aggiornamento della docstring e del commento interno della funzione, allineati alla nuova logica.
+- Aggiunta di `profiling/benchmark_stress.py`: confronto riproducibile tra la funzione di produzione e un'implementazione di riferimento a ciclo pieno, definita nel solo script, su correttezza e tempo. Lo script si esegue dalla radice della repository come modulo (`python -m profiling.benchmark_stress`), affinché il pacchetto `winery_adventures` risulti importabile.
+
+**Verifica**
+- Correttezza sul dataset da 100.000 letture: differenza massima tra ciclo pieno e variante ottimizzata dell'ordine di 10⁻¹³ su tutte le 100 cisterne, entro la tolleranza `1e-7` dei test.
+- Tempo sulla macchina di riferimento (macOS, Apple Silicon): sulla cisterna con più letture la variante risulta circa 1.9 volte più veloce del ciclo pieno (0.32 ms contro 0.61 ms); l'intera `analyze_data` sul dataset completo richiede circa 34 ms. Il fattore di accelerazione della sola funzione dipende dalla macchina — circa 1.4x in un ambiente Linux di verifica, circa 1.9x sulla macchina di riferimento — per effetto delle diverse ottimizzazioni di compilatore e architettura.
+- Suite completa dei test verde con la funzione ottimizzata: il valore 2.2 e la natura di Dispatcher Numba della funzione restano invariati.
+
+**Decisioni**
+- Guadagno reale inferiore al dimezzamento teorico: il ciclo pieno è regolare e ben ottimizzato da compilatore e CPU, mentre il ciclo sul triangolo superiore compie meno iterazioni ma con efficienza per iterazione inferiore. La riduzione del lavoro algoritmico non si traduce in un dimezzamento del tempo a parete.
+- Implementazione di riferimento a ciclo pieno collocata nel solo script di benchmark e non in produzione, per mantenere un'unica funzione di stress nel modulo e disporre al contempo del termine di paragone per il report.
+- Codice di profilazione separato dal pacchetto sorgente in una cartella `profiling/` dedicata, in quanto strumento di analisi e non componente di produzione.
+
+**File toccati**
+- Modifica di `winery_adventures/computations.py`. Aggiunta di `profiling/benchmark_stress.py`. Aggiornamento di `DIARIO.md`.

@@ -260,3 +260,23 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Aggiunta di `winery_adventures/computations.py` e `winery_adventures/main.py`; modifica di `pyproject.toml` (marcatore `slow`); aggiornamento di `DIARIO.md`.
+
+### 19-08-2026 — Fase 6: Generazione del dataset grande e correzione di riproducibilità
+
+**Attività**
+- Esecuzione di `data_generator.py` per il dataset di dimensioni maggiori: 100 cisterne e 100.000 letture dei sensori, scritte in `data/full_sensors.tsv` e `data/full_tank_info.tsv`.
+- Individuazione di una dipendenza mancante: `data_generator.py` importa `tqdm` (barra di avanzamento della generazione), pacchetto assente da `requirements.txt`. La ricostruzione dell'ambiente dal solo `requirements.txt`, seguita dall'esecuzione del generatore, terminava con `ModuleNotFoundError: No module named 'tqdm'`.
+- Aggiunta di `tqdm==4.70.0` a `requirements.txt`, nella posizione alfabetica coerente con l'ordine esistente.
+- Aggiunta al `.gitignore` dell'esclusione dei dataset generati di grandi dimensioni (`data/full_*.tsv`), artefatti derivati e rigenerabili tramite lo script.
+
+**Caratteristiche del dataset generato**
+- Letture dei sensori: 100.000 righe, colonne `tank_id`, `time`, `pH`, `temp`, `quantity_liters`. Valori mancanti in `quantity_liters` pari a circa il 10% delle righe.
+- Distribuzione per cisterna: 100 cisterne distinte, tra circa 900 e circa 1100 letture ciascuna. Informazioni sulle cisterne: 100 righe, tre vitigni per cisterna.
+- Rilievo per la profilazione: la formula di stress è O(n²) per singola cisterna; con circa mille letture per cisterna il costo per cisterna è dell'ordine del milione di contributi, per un totale dell'ordine di cento milioni sull'intero dataset.
+
+**Decisioni**
+- Dipendenza `tqdm` dichiarata in `requirements.txt` anziché rimossa da `data_generator.py`: lo script è impalcatura fornita con il progetto e la correzione meno invasiva consiste nel dichiarare la dipendenza, non nel modificare il file.
+- Dataset di grandi dimensioni escluso dal versionamento: file derivato, rigenerabile dallo script, di dimensione non trascurabile. I dataset di esempio restano versionati per lo sviluppo rapido.
+
+**File toccati**
+- Modifica di `requirements.txt` e `.gitignore`. Aggiornamento di `DIARIO.md`. Generazione locale (non versionata) di `data/full_sensors.tsv` e `data/full_tank_info.tsv`.

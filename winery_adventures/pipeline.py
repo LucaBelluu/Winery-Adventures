@@ -8,6 +8,8 @@ la pipeline lo invoca in ordine, passando l'uscita di un analizzatore in
 ingresso al successivo.
 """
 
+import os
+
 import polars as pl
 import wandb
 
@@ -66,13 +68,18 @@ class WineryPipeline:
         voce per ciascuna cisterna, contenente identificativo e punteggio di
         stress. La riduzione a una voce per cisterna evita registrazioni
         ridondanti quando il punteggio risulta replicato su tutte le righe del
-        gruppo.
+        gruppo. L'esperimento è avviato in modalità offline per default,
+        sovrascrivibile con la variabile d'ambiente ``WANDB_MODE``.
 
         :param df: DataFrame contenente almeno le colonne ``tank_id`` e
             ``stress_score``.
         """
-        # Avvio dell'esperimento: da questo punto wandb.run risulta attivo.
-        wandb.init(project=self.project_name)
+        # Avvio dell'esperimento in modalità offline per default: la
+        # registrazione resta locale nella cartella ``wandb/`` e non richiede
+        # account né autenticazione, così l'esecuzione risulta riproducibile da
+        # chiunque. La variabile d'ambiente ``WANDB_MODE`` consente di forzare
+        # un'altra modalità, ad esempio ``online``, senza modificare il codice.
+        wandb.init(project=self.project_name, mode=os.getenv("WANDB_MODE", "offline"))
 
         # Riduzione a una riga per cisterna: il punteggio di stress è costante
         # all'interno dello stesso gruppo, quindi le repliche non aggiungono

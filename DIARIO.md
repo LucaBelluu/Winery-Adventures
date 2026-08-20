@@ -375,6 +375,21 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 **File toccati**
 - Aggiunta di `profiling/benchmark_memory.py`. Aggiornamento di `DIARIO.md`.
 
-**Elementi in sospeso**
-- Esecuzione degli script di profilazione sulla macchina di riferimento per i valori definitivi del report.
-- Logging su wandb e stesura del report di performance (obiettivo 5).
+### 20-08-2026 — Fase 6: Registrazione su Weights & Biases in modalità offline
+
+**Attività**
+- Impostazione della modalità offline come default in `WineryPipeline.log_to_wandb`: `wandb.init` riceve `mode=os.getenv("WANDB_MODE", "offline")`. La registrazione resta locale nella cartella `wandb/` e non richiede account né autenticazione. La variabile d'ambiente `WANDB_MODE` consente di forzare un'altra modalità, ad esempio `online`, senza modificare il codice.
+
+**Motivazione**
+- La modalità predefinita di wandb è online e, in assenza di autenticazione, interrompe l'esecuzione con una richiesta di login. L'offline come default rende la pipeline eseguibile da chiunque senza configurazione, coerentemente con il requisito di riproducibilità. Le run offline restano sincronizzabili in seguito con `wandb sync`, qualora serva una dashboard online per la presentazione.
+
+**Verifica**
+- Registrazione offline eseguita attraverso `WineryPipeline.log_to_wandb` su dati reali: creazione della run locale in `wandb/offline-run-...` e registrazione di una voce di `stress_score` per cisterna, senza login. La cartella `wandb/` è già esclusa dal versionamento.
+- `test_log_wandb` verde: il finto `wandb.init` del banco di prova ignora il nuovo parametro. Suite completa da riconfermare sulla macchina di riferimento, dove sono presenti tutti i moduli sorgente.
+- `ruff check` e `ruff format --check` su `pipeline.py` senza segnalazioni.
+
+**Decisioni**
+- Modalità offline scelta come default per la riproducibilità, con override tramite `WANDB_MODE` per non precludere la modalità online. Scartata l'alternativa di codificare rigidamente l'offline, che avrebbe richiesto una modifica al codice per passare all'online.
+
+**File toccati**
+- Modifica di `winery_adventures/pipeline.py`. Aggiornamento di `DIARIO.md`.

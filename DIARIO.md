@@ -317,3 +317,25 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Modifica di `pyproject.toml`. Aggiornamento di `DIARIO.md`.
+
+### 19-08-2026 — Fase 6: Analisi thread contro processi per la parallelizzazione
+
+**Attività**
+- Analisi del backend di parallelizzazione di `WineryHPCComputations.analyze_data`, che distribuisce il calcolo dello stress per cisterna con Joblib.
+- Aggiunta di `profiling/benchmark_parallel.py`: misura riproducibile dell'esecuzione seriale, a thread (con e senza `nogil`) e a processi, sul dataset di grandi dimensioni, con controllo di coerenza dei risultati tra le strategie.
+- Allineamento della formattazione di `profiling/benchmark_stress.py` a `ruff format` con line-length 120: interruzioni di riga manuali sostituite dalla formattazione canonica.
+
+**Constatazioni**
+- Il finto `Parallel` del banco di prova (`monkey_joblib` in `conftest.py`) esegue i task ma restituisce `None`: la raccolta dei risultati avviene per il solo effetto collaterale delle chiamate. Il codice di produzione deve quindi accumulare in una struttura condivisa, non affidarsi al valore restituito da `Parallel`.
+- L'accumulo per effetto collaterale in una lista condivisa produce risultati corretti solo con il backend a thread, che condivide la memoria del processo. Con il backend a processi la lista del processo padre resta vuota (verifica diretta: 100 risultati su 100 con i thread, 0 su 100 con i processi), poiché ogni processo dispone di una propria memoria.
+- Il flag `nogil` rende effettivo il parallelismo dei thread sul calcolo compilato: in sua assenza il GIL serializza l'esecuzione della funzione anche tra thread distinti.
+
+**Misure sulla macchina di riferimento (macOS, Apple Silicon, 10 core; dataset da 100.000 letture, 100 cisterne)**
+- Tempi di `analyze_data` per strategia: seriale 41.9 ms (riferimento); thread con `nogil` 13.2 ms, accelerazione 3.17x; thread senza `nogil` 40.5 ms, accelerazione 1.03x, in pratica pari al seriale; processi (loky) 18.5 ms, accelerazione 2.26x.
+- Il confronto tra thread con e senza `nogil` isola il contributo del flag: senza il rilascio del GIL i thread non accelerano il calcolo compilato. I processi accelerano rispetto al seriale ma restano sotto i thread, per il costo di avvio e di serializzazione dei dati. L'accelerazione dei thread, pari a circa 3x su 10 core anziché prossima a 10x, riflette la frazione di lavoro non parallelizzabile (preparazione dei dati e composizione del risultato) e il costo di distribuzione dei task, secondo la legge di Amdahl.
+
+**Decisioni**
+- Backend a thread confermato per `analyze_data`, come già in essere. La scelta non è arbitraria: è l'unica coerente con lo schema di accumulo imposto dal banco di prova e con la correttezza a runtime, ed è anche la più veloce sulla macchina di riferimento. Il backend a processi, oltre a non condividere la lista dei risultati, aggiunge il costo di avvio e di serializzazione dei dati, non giustificato per compiti numerici brevi e indipendenti.
+
+**File toccati**
+- Aggiunta di `profiling/benchmark_parallel.py`. Modifica di `profiling/benchmark_stress.py` (formattazione). Aggiornamento di `DIARIO.md`.

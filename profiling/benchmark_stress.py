@@ -88,14 +88,16 @@ def main() -> None:
     # Correttezza: differenza massima tra le due varianti su tutte le cisterne.
     max_diff = 0.0
     for group in groups.values():
-        args = (group["pH"].to_numpy(), group["temp"].to_numpy(),
-                group["quantity_liters"].to_numpy().astype(float))
+        args = (group["pH"].to_numpy(), group["temp"].to_numpy(), group["quantity_liters"].to_numpy().astype(float))
         max_diff = max(max_diff, abs(pairwise_stress_function(*args) - _baseline_full_loop(*args)))
 
     # Tempo a livello di singola funzione sulla cisterna con più letture.
     largest = max(groups.values(), key=lambda g: g.height)
-    big_args = (largest["pH"].to_numpy(), largest["temp"].to_numpy(),
-                largest["quantity_liters"].to_numpy().astype(float))
+    big_args = (
+        largest["pH"].to_numpy(),
+        largest["temp"].to_numpy(),
+        largest["quantity_liters"].to_numpy().astype(float),
+    )
     t_base_fn = _best_time(lambda: _baseline_full_loop(*big_args), 200)
     t_sym_fn = _best_time(lambda: pairwise_stress_function(*big_args), 200)
 

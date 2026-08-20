@@ -358,3 +358,23 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Modifica di `requirements.txt` e dei moduli in `winery_adventures/` e `profiling/` (a-capo finale e formattazione). Aggiornamento di `DIARIO.md`.
+
+### 20-08-2026 — Fase 6: Profilazione della memoria
+
+**Attività**
+- Aggiunta di `profiling/benchmark_memory.py`: misura la memoria ausiliaria della formula di stress e il picco di memoria del processo durante `analyze_data`, con due strumenti distinti (`tracemalloc` per le allocazioni lato Python, `resource` per il picco RSS dell'intero processo).
+
+**Constatazioni**
+- La formula compilata occupa memoria ausiliaria O(1): accumula uno scalare e non materializza la matrice delle coppie. Sulla cisterna con più letture (n circa 970) il picco lato Python del ciclo è dell'ordine del centinaio di byte, contro i circa 29 MB di una variante vettorizzata equivalente che costruisce matrici n×n (memoria O(n²)). Il ciclo è quindi ottimale non solo nel tempo (compilazione Numba) ma anche nella memoria.
+- `tracemalloc` non osserva la memoria nativa di Polars (Arrow/Rust): il picco reale dell'intera `analyze_data` va misurato sul processo (RSS). Il picco RSS dell'intero processo, dataset da 100.000 letture incluso, è dell'ordine di alcune centinaia di MB, dovuti in buona parte a Python, alle librerie, alla compilazione JIT una tantum e alla duplicazione dei dati operata da `partition_by`, non al calcolo O(n²), che non alloca memoria.
+
+**Decisioni**
+- Due strumenti mantenuti insieme, ciascuno con il proprio ambito dichiarato: la profilazione lato Python isola il comportamento della formula, il picco RSS del processo fornisce il dato di sistema comprensivo di Polars. Nessuna dipendenza aggiuntiva: `tracemalloc` e `resource` appartengono alla libreria standard.
+- L'unità di `ru_maxrss` dipende dalla piattaforma (byte su macOS, kilobyte su Linux): lo script normalizza in base a `sys.platform`.
+
+**File toccati**
+- Aggiunta di `profiling/benchmark_memory.py`. Aggiornamento di `DIARIO.md`.
+
+**Elementi in sospeso**
+- Esecuzione degli script di profilazione sulla macchina di riferimento per i valori definitivi del report.
+- Logging su wandb e stesura del report di performance (obiettivo 5).

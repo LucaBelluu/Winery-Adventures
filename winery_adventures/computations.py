@@ -18,11 +18,17 @@ from numba import njit
 from winery_adventures.base import BaseWineryAnalyzer
 
 
-# ``@njit`` compila la funzione in codice macchina alla prima chiamata
-# (nopython mode), requisito di ottimizzazione richiesto dalla consegna per la
-# formula O(n²). Il corpo resta puramente numerico su array NumPy, senza oggetti
-# Python, condizione necessaria alla compilazione nopython.
-@njit
+# ``@njit`` compila la funzione in codice macchina alla prima chiamata (nopython
+# mode), requisito di ottimizzazione richiesto dalla consegna per la formula
+# O(n²). Il corpo resta puramente numerico su array NumPy, senza oggetti Python,
+# condizione necessaria alla compilazione nopython. I flag del decoratore:
+# ``fastmath`` concede aritmetica in virgola mobile più veloce e meno rigorosa,
+# lecita qui poiché i volumi sono sempre positivi e i valori mancanti già
+# esclusi, quindi non insorgono divisioni per zero né infiniti; ``nogil`` rilascia
+# il GIL durante l'esecuzione, condizione che consente ai thread di Joblib di
+# calcolare più cisterne davvero in parallelo; ``cache`` salva su disco il codice
+# compilato, così gli avvii successivi non ripagano il tempo di compilazione.
+@njit(fastmath=True, nogil=True, cache=True)
 def pairwise_stress_function(pH_vals: np.ndarray, temp_vals: np.ndarray, quantity_vals: np.ndarray) -> float:
     """Calcola lo stress di fermentazione su un insieme di rilevazioni.
 

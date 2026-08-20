@@ -339,3 +339,22 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Aggiunta di `profiling/benchmark_parallel.py`. Modifica di `profiling/benchmark_stress.py` (formattazione). Aggiornamento di `DIARIO.md`.
+
+### 19-08-2026 — Fase 6: Installazione e fissaggio di Ruff, formattazione del sorgente
+
+**Attività**
+- Installazione di Ruff nella macchina di riferimento e fissaggio della versione in `requirements.txt` (`ruff==0.16.3`), in precedenza assente.
+- Esecuzione di `ruff check --fix` e `ruff format` sul codice sorgente (`winery_adventures/`) e sugli script di profilazione (`profiling/`). Correzione principale: aggiunta dell'a-capo finale mancante ai moduli del pacchetto (regola `W292`), oltre alla formattazione canonica.
+
+**Motivazione**
+- Ruff risultava configurato in `pyproject.toml` ma né installato né dichiarato tra le dipendenze: i controlli di stile non erano di fatto eseguibili. Il fissaggio della versione rende la formattazione deterministica e riproducibile, presupposto per l'integrazione continua, dove l'esito dipende dalla versione dello strumento.
+
+**Verifica**
+- `ruff check` e `ruff format --check` su `winery_adventures/` e `profiling/` senza segnalazioni. Suite dei test invariata: la formattazione non altera la logica.
+
+**Decisioni**
+- Ruff dichiarato in `requirements.txt` accanto agli altri strumenti di sviluppo già presenti (pytest), coerentemente con l'impostazione esistente a file unico di dipendenze.
+- Ambito della formattazione limitato al codice proprio (`winery_adventures/`, `profiling/`); i file forniti con il progetto (`tests/`, `data_generator.py`) lasciati invariati. La scelta di includerli e la relativa configurazione di Ruff sono rimandate alla fase di integrazione continua.
+
+**File toccati**
+- Modifica di `requirements.txt` e dei moduli in `winery_adventures/` e `profiling/` (a-capo finale e formattazione). Aggiornamento di `DIARIO.md`.

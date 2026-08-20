@@ -18,6 +18,7 @@ target-version = "py310"
 select = ["E", "W", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 markers = [
-    "slow: contrassegna i test lenti, come l'accettazione end-to-end della pipeline.",
+    "slow: contrassegna i test di accettazione end-to-end, lenti",
 ]

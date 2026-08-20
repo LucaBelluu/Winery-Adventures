@@ -300,3 +300,20 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Modifica di `winery_adventures/computations.py`. Aggiunta di `profiling/benchmark_stress.py`. Aggiornamento di `DIARIO.md`.
+
+### 19-08-2026 — Fase 6: Configurazione del percorso di import per l'esecuzione dei test
+
+**Attività**
+- Aggiunta di `pythonpath = ["."]` alla sezione `[tool.pytest.ini_options]` di `pyproject.toml`, che pone la radice della repository sul percorso di ricerca dei moduli durante l'esecuzione dei test.
+
+**Motivazione**
+- Il comando `pytest` diretto non aggiunge la cartella corrente al percorso di ricerca dei moduli, a differenza di `python -m pytest`. Con le cartelle dei test prive di file `__init__.py` che le colleghino alla radice, il comando diretto non individuava il pacchetto `winery_adventures` e interrompeva la raccolta con `ModuleNotFoundError`. L'impostazione esplicita di `pythonpath` rende la suite eseguibile con il comando diretto, condizione necessaria anche alla futura integrazione continua.
+
+**Verifica**
+- Il comando `pytest`, senza variabili d'ambiente aggiuntive, individua il pacchetto, raccoglie tutti i moduli di test e li supera.
+
+**Decisioni**
+- Configurazione esplicita in `pyproject.toml` preferita all'aggiunta di file `__init__.py` nelle cartelle dei test o alla dipendenza dal comando `python -m pytest`: soluzione unica, dichiarata nel file di configurazione, indipendente dal modo di invocazione e adatta all'integrazione continua.
+
+**File toccati**
+- Modifica di `pyproject.toml`. Aggiornamento di `DIARIO.md`.

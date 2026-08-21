@@ -1,5 +1,7 @@
 # Winery Adventures
 
+[![CI](https://github.com/LucaBelluu/Winery-Adventures/actions/workflows/ci.yml/badge.svg)](https://github.com/LucaBelluu/Winery-Adventures/actions/workflows/ci.yml)
+
 Pipeline in Python per l'analisi dei dati dei sensori delle cisterne di
 fermentazione di una cantina. Il sistema legge le letture dei sensori, le
 arricchisce con statistiche per cisterna e per vitigno, calcola un indice di

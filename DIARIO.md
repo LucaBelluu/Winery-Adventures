@@ -459,3 +459,14 @@ Riscrittura del README come documentazione portante dell'intero progetto, in sos
 
 **File toccati**
 - Modifica di `pyproject.toml` e `winery_adventures/pipeline.py`. Aggiornamento di `DIARIO.md`.
+
+### 21-08-2026 — Fase 9: Badge di stato della CI nel README
+
+**Attività**
+- Aggiunta del badge di stato dell'integrazione continua in testa al `README.md`, subito sotto il titolo. Il badge riflette l'esito dell'ultima esecuzione del workflow sul ramo predefinito e rimanda alla scheda Actions della repository.
+
+**Motivazione**
+- Il badge comunica a colpo d'occhio, a chiunque apra la repository, lo stato dei controlli automatici, e collega la documentazione all'infrastruttura di integrazione continua.
+
+**File toccati**
+- Modifica di `README.md`. Aggiornamento di `DIARIO.md`.

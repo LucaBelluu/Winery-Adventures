@@ -260,7 +260,7 @@ ambiente dedicato evita conflitti con altri pacchetti già presenti sul sistema.
 appena creata.
 
 ```bash
-git clone <URL-del-repository>
+git clone https://github.com/LucaBelluu/Winery-Adventures/tree/main
 cd Winery-Adventures
 ```
 

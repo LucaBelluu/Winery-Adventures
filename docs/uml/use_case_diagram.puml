@@ -1,0 +1,44 @@
+@startuml use_case_diagram
+' Diagramma dei casi d'uso di Winery Adventures.
+' Rappresenta la vista esterna del sistema: l'attore che avvia l'analisi dei
+' dati di fermentazione, gli obiettivi che il sistema soddisfa e il sistema
+' esterno verso cui i risultati vengono registrati.
+
+left to right direction
+skinparam packageStyle rectangle
+
+' Attore primario: avvia l'analisi. Attore secondario: sistema esterno di
+' registrazione dei risultati.
+actor "Operatore di cantina" as Operatore
+actor "Weights & Biases" as WB
+
+rectangle "Winery Adventures" {
+  usecase "Analizzare i dati\ndi fermentazione" as UC_Main
+  usecase "Caricare i dati di\nsensori e cisterne" as UC_Load
+  usecase "Calcolare lo stress\ndi fermentazione" as UC_Stress
+  usecase "Arricchire i dati\ncon le statistiche" as UC_Transform
+  usecase "Esportare il\nrisultato su file" as UC_Export
+  usecase "Registrare i risultati\nsu Weights & Biases" as UC_Log
+}
+
+' Associazione dell'attore primario all'obiettivo principale.
+Operatore -- UC_Main
+
+' Passi sempre eseguiti come parte dell'analisi.
+UC_Main ..> UC_Load : <<include>>
+UC_Main ..> UC_Stress : <<include>>
+UC_Main ..> UC_Transform : <<include>>
+UC_Main ..> UC_Export : <<include>>
+
+' Comportamento opzionale, subordinato al flag di registrazione.
+UC_Log ..> UC_Main : <<extend>>
+
+' Il caso d'uso di registrazione dialoga con il sistema esterno.
+UC_Log -- WB
+
+note bottom of UC_Transform
+  Aggiunge pH medio per cisterna, numero di letture
+  per cisterna e per vitigno, deviazione di temperatura.
+end note
+
+@enduml

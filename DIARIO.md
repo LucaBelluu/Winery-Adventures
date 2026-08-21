@@ -408,3 +408,6 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Aggiunta di `docs/performance.md`. Aggiornamento di `DIARIO.md`.
+
+## 21-08-2026 — Fase 7: diagrammi UML
+Adozione di PlantUML come strumento per i diagrammi UML, con sorgenti testuali in `docs/uml/`. Motivazione: PlantUML copre nativamente e con notazione UML corretta tutti e tre i diagrammi richiesti, casi d'uso compresi; resta testuale e versionabile su Git e si integra con Sphinx, già adottato per la documentazione. Realizzazione del diagramma delle classi, fedele all'implementazione: classe base astratta `BaseWineryAnalyzer`, sottoclassi concrete `WineryTransformer` e `WineryHPCComputations`, orchestratrice `WineryPipeline` legata agli analizzatori per aggregazione (duck typing sul metodo `analyze_data`), funzione libera `pairwise_stress_function` con stereotipo di funzione compilata, moduli procedurali `data_loading` e `main`. Sorgente e PNG generati in `docs/uml/`. File toccati: `docs/uml/class_diagram.puml`, `docs/uml/class_diagram.png`. In sospeso: diagramma di sequenza, diagramma dei casi d'uso.

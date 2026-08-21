@@ -1,0 +1,84 @@
+@startuml class_diagram
+' Diagramma delle classi di Winery Adventures.
+' Descrive la struttura statica del sistema: il contratto astratto comune agli
+' analizzatori, le due sottoclassi concrete (trasformazioni e calcoli ad alte
+' prestazioni), la pipeline orchestratrice, la funzione libera di calcolo dello
+' stress e i moduli procedurali di caricamento dati e avvio.
+
+skinparam classAttributeIconSize 0
+hide empty members
+
+' Contratto comune: metodo astratto che ogni analizzatore concreto realizza.
+abstract class BaseWineryAnalyzer {
+  + {abstract} analyze_data(df: DataFrame): DataFrame
+}
+
+' Analizzatore delle trasformazioni sulle letture dei sensori.
+class WineryTransformer {
+  + {static} STANDARD_TEMPERATURE: float = 26.0
+  + tank_info: DataFrame | None
+  --
+  + __init__(tank_info: DataFrame | None = None)
+  + analyze_data(df: DataFrame): DataFrame
+  + add_avg_ph_per_tank(df: DataFrame): DataFrame
+  + add_num_readings_per_tank(df: DataFrame): DataFrame
+  + add_num_readings_per_grape_variety(df: DataFrame): DataFrame
+  + add_temperature_deviation(df: DataFrame): DataFrame
+}
+
+' Analizzatore dei calcoli ad alte prestazioni: stress di fermentazione.
+class WineryHPCComputations {
+  - _stress_for_group(tank_id: int, group: DataFrame, results: list): None
+  + analyze_data(df: DataFrame): DataFrame
+}
+
+' Orchestratrice: applica in sequenza gli analizzatori e registra su wandb.
+class WineryPipeline {
+  + analyzers: list
+  + project_name: str
+  --
+  + __init__(analyzers: list, project_name: str = "winery-adventures")
+  + run(df: DataFrame, log_to_wandb: bool = False): DataFrame
+  + log_to_wandb(df: DataFrame): None
+}
+
+' Formula di stress: funzione libera O(n^2) compilata con Numba.
+class "pairwise_stress_function" as PairwiseStress <<njit function>> {
+  + (pH_vals, temp_vals, quantity_vals): float
+}
+
+' Modulo di caricamento dei file TSV di ingresso.
+class "data_loading" as DataLoading <<module>> {
+  + load_sensor_data(path: str): DataFrame
+  + load_tank_info(path: str): DataFrame
+}
+
+' Modulo di avvio: compone e orchestra l'intera pipeline.
+class "main" as Main <<module>> {
+  + run_full_pipeline(input_csv: str, tank_info_csv: str, output_csv: str, project_name: str): DataFrame
+}
+
+' Ereditarieta': le due sottoclassi realizzano il contratto astratto.
+BaseWineryAnalyzer <|-- WineryTransformer
+BaseWineryAnalyzer <|-- WineryHPCComputations
+
+' Aggregazione: la pipeline possiede una collezione di analizzatori.
+WineryPipeline o--> "0..*" BaseWineryAnalyzer : analyzers
+
+' Dipendenza: l'analizzatore HPC invoca la funzione libera di stress.
+WineryHPCComputations ..> PairwiseStress : chiama
+
+' Dipendenze del modulo di avvio verso i componenti che compone.
+Main ..> DataLoading : usa
+Main ..> WineryPipeline : compone
+Main ..> WineryTransformer : istanzia
+Main ..> WineryHPCComputations : istanzia
+
+' Nota sul duck typing accettato dalla pipeline.
+note bottom of WineryPipeline
+  Accetta per duck typing qualunque oggetto
+  dotato di analyze_data; in pratica riceve
+  sottoclassi di BaseWineryAnalyzer.
+end note
+
+@enduml

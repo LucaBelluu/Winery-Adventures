@@ -442,3 +442,20 @@ Riscrittura del README come documentazione portante dell'intero progetto, in sos
 
 **File toccati**
 - Aggiunta di `.github/workflows/ci.yml`. Modifica di `winery_adventures/pipeline.py` e `profiling/benchmark_memory.py` (normalizzazione). Aggiornamento di `DIARIO.md`.
+
+### 21-08-2026 — Fase 9: Correzione di una divergenza di linting tra locale e integrazione continua
+
+**Problema**
+- La prima esecuzione del workflow è fallita sullo step di linting con la regola `I001` su `winery_adventures/pipeline.py`, pur risultando il controllo verde in locale con la stessa versione di Ruff e la stessa configurazione.
+
+**Causa**
+- L'ordinamento degli import di Ruff classifica i moduli in gruppi (libreria standard, terze parti, interni). La classificazione del modulo `wandb` dipende dalla presenza della cartella locale `wandb/`, creata dalle esecuzioni offline e esclusa dal versionamento: in locale la cartella induce la classificazione di `wandb` come modulo interno, con una riga vuota di separazione da `polars`; in integrazione continua, dove la cartella è assente, `wandb` risulta di terze parti e va raggruppato con `polars` senza riga vuota. La divergenza deriva quindi dallo stato locale del filesystem, non dal codice. Riproduzione confermata: con la cartella `wandb/` il controllo passa, senza la cartella segnala `I001`.
+
+**Soluzione**
+- Dichiarazione esplicita di `wandb` tra le dipendenze esterne nell'ordinamento degli import, tramite `[tool.ruff.lint.isort] known-third-party = ["wandb"]` in `pyproject.toml`. La classificazione diventa deterministica e indipendente dalle cartelle locali. Riformattazione conseguente di `pipeline.py` con `ruff check --fix`.
+
+**Verifica**
+- Con la configurazione aggiornata il file in forma canonica passa il controllo anche in presenza della cartella `wandb/`; `ruff check --fix` produce l'ordinamento canonico. Linting, formattazione e suite Pytest verdi in locale.
+
+**File toccati**
+- Modifica di `pyproject.toml` e `winery_adventures/pipeline.py`. Aggiornamento di `DIARIO.md`.

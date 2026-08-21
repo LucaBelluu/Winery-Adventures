@@ -17,6 +17,14 @@ target-version = "py310"
 #   B    -> insidie comuni (flake8-bugbear)
 select = ["E", "W", "F", "I", "UP", "B"]
 
+# Classificazione esplicita degli import per l'ordinamento (regola I).
+[tool.ruff.lint.isort]
+# Dichiara wandb come libreria di terze parti. La cartella locale di log wandb/,
+# esclusa dal versionamento, altrimenti induce la classificazione di wandb come
+# modulo interno al progetto, con ordinamento degli import divergente tra
+# ambiente locale e integrazione continua.
+known-third-party = ["wandb"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 markers = [

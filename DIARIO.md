@@ -393,3 +393,18 @@ Memoria condivisa del progetto. Raccoglie in ordine cronologico ogni decisione e
 
 **File toccati**
 - Modifica di `winery_adventures/pipeline.py`. Aggiornamento di `DIARIO.md`.
+
+### 20-08-2026 — Fase 6: Report di performance
+
+**Attività**
+- Stesura di `docs/performance.md`, report che raccoglie le misure di tempo, parallelizzazione e memoria della macchina di riferimento, con la metodologia e i comandi di riproduzione tramite gli script di `profiling/`.
+
+**Contenuto**
+- Ambiente e dataset di riferimento. Ottimizzazione algoritmica della formula: ciclo pieno 0,607 ms contro triangolo superiore 0,415 ms sulla cisterna con 991 letture (1,46x), risultato invariato entro 1e-7. Flag di compilazione Numba e loro effetto. Parallelizzazione su 10 core: seriale 42,2 ms, thread con `nogil` 12,0 ms (3,53x), thread senza `nogil` 41,9 ms (1,01x), processi 17,9 ms (2,36x). Memoria della formula: ciclo O(1) 0,1 KB contro variante vettorizzata O(n²) 29,97 MB; picco RSS del processo circa 230 MB. Registrazione offline su wandb.
+
+**Decisioni**
+- Report collocato in `docs/`, cartella convenzionale della documentazione e compatibile con Sphinx (Fase 8); formato Markdown per leggibilità e versionabilità. La cartella `docs/_build/` è già esclusa dal versionamento, il sorgente del report resta tracciato.
+- Conclusione documentata: la configurazione di produzione (triangolo superiore, `@njit(fastmath, nogil, cache)`, parallelizzazione a thread) è ottimale nel tempo e nella memoria, e il backend a thread è l'unico coerente con lo schema di raccolta dei risultati imposto dal banco di prova.
+
+**File toccati**
+- Aggiunta di `docs/performance.md`. Aggiornamento di `DIARIO.md`.

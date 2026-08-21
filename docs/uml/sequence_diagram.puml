@@ -1,0 +1,86 @@
+@startuml sequence_diagram
+' Diagramma di sequenza di Winery Adventures.
+' Traccia il flusso di esecuzione di run_full_pipeline: dal caricamento dei due
+' file TSV, attraverso il calcolo dello stress per cisterna e le trasformazioni,
+' fino alla registrazione su Weights & Biases e alla scrittura del risultato su
+' file. L'ordine temporale procede dall'alto verso il basso.
+
+actor Esecutore as User
+participant "run_full_pipeline\n(main)" as Main
+participant "data_loading" as DL
+participant "pipeline\n: WineryPipeline" as Pipe
+participant "hpc\n: WineryHPCComputations" as HPC
+participant "pairwise_stress_function" as Stress
+participant "transformer\n: WineryTransformer" as TR
+participant "wandb" as WB
+
+User -> Main : run_full_pipeline(input_csv, tank_info_csv, output_csv, project_name)
+activate Main
+
+' Caricamento dei due file TSV di ingresso.
+Main -> DL : load_sensor_data(input_csv)
+activate DL
+DL --> Main : sensors : DataFrame
+deactivate DL
+
+Main -> DL : load_tank_info(tank_info_csv)
+activate DL
+DL --> Main : tank_info : DataFrame
+deactivate DL
+
+' Avvio dell'orchestrazione sulla catena di analizzatori.
+Main -> Pipe : run(sensors, log_to_wandb=True)
+activate Pipe
+
+' Primo analizzatore: stress di fermentazione per cisterna.
+Pipe -> HPC : analyze_data(df)
+activate HPC
+note right of HPC
+  Partizione delle letture per tank_id ed
+  esecuzione parallela per cisterna (Joblib).
+end note
+loop per ogni cisterna
+  HPC -> HPC : _stress_for_group(tank_id, group, results)
+  activate HPC
+  HPC -> Stress : pairwise_stress_function(pH, temp, quantity)
+  activate Stress
+  Stress --> HPC : stress : float
+  deactivate Stress
+  deactivate HPC
+end
+HPC --> Pipe : df + stress_score
+deactivate HPC
+
+' Secondo analizzatore: trasformazioni applicate in sequenza.
+Pipe -> TR : analyze_data(df)
+activate TR
+TR -> TR : add_avg_ph_per_tank(df)
+TR -> TR : add_num_readings_per_tank(df)
+TR -> TR : add_temperature_deviation(df)
+opt tank_info presente
+  TR -> TR : add_num_readings_per_grape_variety(df)
+end
+TR --> Pipe : df arricchito
+deactivate TR
+
+' Registrazione opzionale su Weights & Biases.
+opt log_to_wandb == True
+  Pipe -> Pipe : log_to_wandb(df)
+  activate Pipe
+  Pipe -> WB : init(project_name, mode)
+  loop una voce per cisterna
+    Pipe -> WB : log(tank_id, stress_score)
+  end
+  Pipe -> WB : finish()
+  deactivate Pipe
+end
+
+Pipe --> Main : result : DataFrame
+deactivate Pipe
+
+' Scrittura del risultato finale su file e restituzione.
+Main -> Main : result.write_csv(output_csv)
+Main --> User : result : DataFrame
+deactivate Main
+
+@enduml

@@ -30,3 +30,12 @@ pythonpath = ["."]
 markers = [
     "slow: contrassegna i test di accettazione end-to-end, lenti",
 ]
+
+[tool.coverage.run]
+source = ["winery_adventures"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = [
+    "@njit",
+]

@@ -423,3 +423,22 @@ Configurazione della generazione automatica della documentazione API con Sphinx 
 
 ## 21-08-2026 — Fase 8 (Documentazione): README di progetto e archiviazione della traccia
 Riscrittura del README come documentazione portante dell'intero progetto, in sostituzione del testo della traccia originale. Il README è organizzato in capitoli con indice di navigazione e copre: panoramica e obiettivo del sistema, struttura del repository con il ruolo di ogni file, architettura e funzionamento dettagliati di ciascun componente (classe base astratta, caricamento dati, calcolo dello stress con le ottimizzazioni Numba e algoritmica, trasformazioni, orchestrazione e registrazione), requisiti, procedura di installazione con spiegazione di ogni comando, uso della pipeline, formato dei dati, esecuzione dei test, generazione della documentazione Sphinx, performance, diagrammi UML, qualità del codice, licenza e autori. Il livello di dettaglio è intermedio: superiore alla sintesi, inferiore alla documentazione interna dei singoli file, con spiegazione dei termini tecnici per la leggibilità. La traccia originale del docente è spostata in docs/consegna.md, riportata invariata e preceduta da una nota che ne dichiara la natura, come riferimento per la tracciabilità dei requisiti. File toccati: README.md, docs/consegna.md, DIARIO.md. In sospeso: eventuale aggiunta di un entry-point da riga di comando per la pipeline.
+
+### 21-08-2026 — Fase 9: Integrazione continua con GitHub Actions
+
+**Attività**
+- Aggiunta del workflow `.github/workflows/ci.yml`. A ogni push e pull request configura Python 3.12 su runner Ubuntu, installa le dipendenze fissate in `requirements.txt`, esegue linter e controllo di formattazione Ruff sul codice sorgente e sugli script di profilazione, ed esegue l'intera suite Pytest (unitari e accettazione).
+- Normalizzazione con Ruff di `winery_adventures/pipeline.py` e `profiling/benchmark_memory.py`, non allineati alla formattazione canonica: a-capo finale mancante (regola `W292`) in entrambi e ordinamento degli import (regola `I001`) in `pipeline.py`. Lo scostamento deriva da modifiche successive alla passata di formattazione del 19-08: aggiunta di `benchmark_memory.py` e introduzione dell'import `os` in `pipeline.py` per la modalità wandb offline.
+
+**Verifica (ambiente di riferimento, macOS, Python 3.12)**
+- `ruff check` e `ruff format --check` su `winery_adventures/` e `profiling/` senza segnalazioni dopo la normalizzazione. Suite Pytest completa verde: 17 test superati.
+- Risoluzione a secco di `requirements.txt` su Linux/Python 3.12: tutte le versioni fissate dispongono di distribuzione per Linux x86_64, inclusi `polars`, `polars-runtime-32`, `numba` e `llvmlite`; l'installazione in CI riproduce l'ambiente di riferimento senza adattamenti. La compatibilità è vincolata a Python 3.12.
+
+**Decisioni**
+- Job unico con step in sequenza (installazione, linting, formattazione, test): impianto lineare, adeguato alla dimensione del progetto e agevole da esporre.
+- Python 3.12 in CI, coerente con l'ambiente di riferimento e con le dipendenze bloccate; matrice multi-versione non adottata per non entrare in conflitto con le versioni fissate.
+- Ambito di Ruff limitato al codice proprio (`winery_adventures/`, `profiling/`), coerente con la Fase 6. I file forniti col progetto (`tests/`, `data_generator.py`) restano non ristilizzati: costituiscono specifiche e vengono validati dall'esecuzione con Pytest.
+- Trigger su push e pull request come da obiettivo di fase; l'esito compare in automatico nelle pull request.
+
+**File toccati**
+- Aggiunta di `.github/workflows/ci.yml`. Modifica di `winery_adventures/pipeline.py` e `profiling/benchmark_memory.py` (normalizzazione). Aggiornamento di `DIARIO.md`.

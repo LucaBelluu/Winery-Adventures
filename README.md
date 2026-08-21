@@ -44,8 +44,8 @@ modo regolare e quali mostrino segnali di rischio. Winery Adventures affronta
 proprio questo problema: trasforma un flusso di letture in indicatori sintetici
 e interpretabili, utili a monitorare lo stato della fermentazione.
 
-L'obiettivo del sistema è ricevere due file di dati — le letture dei sensori e
-le informazioni sulle cisterne — ed elaborarli lungo una pipeline che aggiunge
+L'obiettivo del sistema è ricevere due file di dati, le letture dei sensori e
+le informazioni sulle cisterne, ed elaborarli lungo una pipeline che aggiunge
 statistiche descrittive, calcola un indice di stress per ogni cisterna e salva
 il risultato finale, registrandone una sintesi su uno strumento di tracciamento
 degli esperimenti.
@@ -99,8 +99,8 @@ Winery-Adventures/
 ```
 
 L'esecuzione della pipeline e la generazione della documentazione producono
-cartelle non versionate — `wandb/` per le registrazioni offline, `docs/_build/`
-per il sito della documentazione, oltre alle cartelle di cache `__pycache__/` —
+cartelle non versionate, `wandb/` per le registrazioni offline, `docs/_build/`
+per il sito della documentazione, oltre alle cartelle di cache `__pycache__/`,
 escluse dal controllo di versione tramite `.gitignore`.
 
 ---
@@ -190,8 +190,8 @@ raddoppia il totale: il risultato è lo stesso, ma i confronti effettivi si
 dimezzano.
 
 Sopra la formula, la classe `WineryHPCComputations` partiziona le letture per
-cisterna, calcola lo stress su ciascun gruppo — distribuendo il lavoro sui core
-disponibili tramite **Joblib** — e riporta il punteggio, costante per cisterna,
+cisterna, calcola lo stress su ciascun gruppo, distribuendo il lavoro sui core
+disponibili tramite **Joblib**, e riporta il punteggio, costante per cisterna,
 su tutte le righe corrispondenti nella colonna `stress_score`.
 
 ### Le trasformazioni
@@ -381,8 +381,8 @@ esecuzione e l'occupazione di memoria, con particolare attenzione al calcolo
 dello stress. Gli script che producono le misure si trovano in `profiling/` e
 coprono tre aspetti: il tempo del calcolo dello stress, l'impronta di memoria e
 il comportamento in parallelo. Le due ottimizzazioni descritte
-nell'[architettura](#calcolo-dello-stress-di-fermentazione) — compilazione con
-Numba e riduzione delle coppie valutate — sono l'oggetto principale dell'analisi.
+nell'[architettura](#calcolo-dello-stress-di-fermentazione), compilazione con
+Numba e riduzione delle coppie valutate, sono l'oggetto principale dell'analisi.
 
 ---
 

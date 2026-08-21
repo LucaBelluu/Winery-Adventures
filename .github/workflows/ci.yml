@@ -2,23 +2,18 @@
 # A ogni push e a ogni pull request installa le dipendenze fissate, esegue il
 # controllo di stile con Ruff e l'intera suite Pytest, e riporta l'esito nelle
 # pull request.
-
 name: CI
-
 # Eventi che avviano il workflow: ogni push e ogni pull request.
 on: [push, pull_request]
-
 jobs:
   # Job unico: prepara l'ambiente ed esegue linter, formattazione e test in sequenza.
   verifica:
     name: Linting e test
     runs-on: ubuntu-latest
-
     steps:
       # Recupera il codice della repository nel runner.
       - name: Recupera il codice
         uses: actions/checkout@v4
-
       # Configura l'interprete Python 3.12, la stessa versione dell'ambiente di
       # riferimento, e abilita la cache dei pacchetti pip.
       - name: Configura Python 3.12
@@ -27,21 +22,18 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
-
       # Installa le versioni esatte dichiarate in requirements.txt.
       - name: Installa le dipendenze
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       # Esegue il linter sul codice sorgente e sugli script di profilazione.
       - name: Linting con Ruff
         run: ruff check winery_adventures/ profiling/
-
       # Verifica che la formattazione corrisponda a quella canonica.
       - name: Verifica della formattazione
         run: ruff format --check winery_adventures/ profiling/
-
-      # Esegue l'intera suite di test, unitari e di accettazione.
-      - name: Esecuzione della suite Pytest
-        run: pytest -v
+      # Esegue l'intera suite di test con misura della copertura e cancello di
+      # qualità: la copertura sotto la soglia fa fallire l'esecuzione.
+      - name: Esecuzione della suite Pytest con copertura
+        run: pytest -v --cov --cov-fail-under=100
